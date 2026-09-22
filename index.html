@@ -355,13 +355,15 @@ function key(d){const t=d||new Date();return t.getFullYear()+'-'+String(t.getMon
 function today(){return key(new Date());}
 function daySec(){const t=today();if(!state.days[t])state.days[t]={new:0,wrong:0,sec:0,learned:0};return state.days[t];}
 function addSec(s){daySec().sec=(daySec().sec||0)+s;save();}
+function startTimer(){stopTimer();sessionStart=now();sessionTimer=setInterval(function(){addSec(1);},1000);}
+function stopTimer(){if(sessionTimer){clearInterval(sessionTimer);sessionTimer=null;}} 
 function touchDay(){const t=today();if(state.last!==t){if(state.last&&new Date(key(new Date(Date.now()-DAY)))===state.last){state.streak++;}else{state.streak=1;}state.last=t;save();}}
 function getW(w){if(!state.w[w])state.w[w]={s:0,fav:false,n:0};return state.w[w];}
 function dueWords(){return WORDS.filter(x=>{const r=getW(x.word);return r.s>=1&&r.s<6&&r.n&&r.n<=now();});}
 function newWords(){return WORDS.filter(x=>getW(x.word).s===0);}
 
-let queue=[],qi=0,mode='new',cur=null,undoStack=[],jumpStack=[],jumpCur=null,revealed=false;
-function nav(screen){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('screen-'+screen).classList.add('active');document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('on'));var ni=document.querySelector('.nav-item[data-nav="'+screen+'"]');if(ni)ni.classList.add('on');if(screen==='home')renderHome();if(screen==='cal')renderCal();if(screen==='me')renderReport();window.scrollTo(0,0);}
+let queue=[],qi=0,mode='new',cur=null,undoStack=[],jumpStack=[],jumpCur=null,revealed=false,sessionStart=0,sessionTimer=null;
+function nav(screen){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('screen-'+screen).classList.add('active');document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('on'));var ni=document.querySelector('.nav-item[data-nav="'+screen+'"]');if(ni)ni.classList.add('on');if(screen!=='study')stopTimer();if(screen==='home')renderHome();if(screen==='cal')renderCal();if(screen==='me')renderReport();window.scrollTo(0,0);}
 function goHome(){nav('home');}
 function renderHome(){
   document.getElementById('streak').textContent=state.streak;
@@ -378,7 +380,7 @@ function renderHome(){
 }
 function startNew(){const q=newWords();if(!q.length){alert('新词都学完啦，去复习吧~');return;}mode='new';queue=q;qi=0;undoStack=[];startSession();}
 function startReview(){const q=dueWords();if(!q.length){alert('今天没有到期的复习~');return;}mode='review';queue=q;qi=0;undoStack=[];startSession();}
-function startSession(){nav('study');renderCard();}
+function startSession(){startTimer();nav('study');renderCard();}
 function renderCard(){
   if(!queue.length){alert('学习队列为空，返回首页。');nav('home');return;}
   if(qi>=queue.length){finishSession();return;}
@@ -442,7 +444,7 @@ function nextNew(){
     const old={w:cur.word,s:r.s,n:r.n};undoStack.push(old);
     touchDay();daySec().new++;daySec().learned++;
     r.s=1;r.n=now()+INTERVALS[0]*DAY;
-    addSec(3);save();
+    save();
   }
   qi++;renderCard();
 }
@@ -503,13 +505,13 @@ function markNext(){
   if(r.s>=1&&r.s<6)daySec().learned++;
   r.s=Math.min(r.s+1,6);
   r.n=r.s<6?now()+INTERVALS[r.s-1]*DAY:0;
-  addSec(3);save();qi++;renderCard();
+  save();qi++;renderCard();
 }
 function markWrong(){
   if(!cur)return;
   const r=getW(cur.word);const old={w:cur.word,s:r.s,n:r.n};undoStack.push(old);
   touchDay();daySec().wrong++;r.wrong=true;
-  r.n=now()+10*60000;save();addSec(2);qi++;renderCard();
+  r.n=now()+10*60000;save();qi++;renderCard();
 }
 function undo(){
   if(jumpCur)return;
@@ -521,7 +523,7 @@ function markKnown(){
   if(!cur)return;
   if(jumpCur){alert('先点「↩ 返回继续背」回到原词再操作哦~');return;}
   const r=getW(cur.word);const old={w:cur.word,s:r.s,n:r.n};undoStack.push(old);
-  r.s=6;r.n=0;r.fav=true;touchDay();daySec().learned++;save();addSec(2);
+  r.s=6;r.n=0;r.fav=true;touchDay();daySec().learned++;save();
   document.getElementById('fav-icon').textContent='★';qi++;renderCard();
 }
 function toggleFav(){if(!cur)return;const r=getW(cur.word);r.fav=!r.fav;save();document.getElementById('fav-icon').textContent=r.fav?'★':'☆';}
@@ -688,7 +690,7 @@ function openAdmin(){
   document.getElementById('admin-data').textContent=makeReport();
   document.getElementById('admin-modal').style.display='flex';
 }
-var NOTICE_VER='3';
+var NOTICE_VER='4';
 function showNoticeIfNeeded(){var read=null;try{read=localStorage.getItem('notice_read_ver');}catch(e){read=null;}if(read!==NOTICE_VER){document.getElementById('notice-modal').style.display='flex';}}
 function closeNotice(){document.getElementById('notice-modal').style.display='none';try{localStorage.setItem('notice_read_ver',NOTICE_VER);}catch(e){}}
 function closeAdmin(){document.getElementById('admin-modal').style.display='none';}
@@ -720,6 +722,9 @@ document.addEventListener('DOMContentLoaded',function(){init();});
       <div style="color:#e23c3c;">此网址功能还未完善，如单词查询仅能查询已收录的词汇，目前仅收录 2700+ 四级词汇。</div>
       <div style="color:#e23c3c;margin-top:6px;">尽量用浏览器打开，不要在微信里直接点开。</div>
       <div style="border-top:1px solid var(--ink-soft);margin:14px 0 10px;"></div>
+      <div style="font-weight:700;color:var(--accent);margin:12px 0 4px">9.23 00:32更新内容</div>
+      <div>· 修复学习时长统计 bug：背完 20 词不再都显示 1 分钟，改为真实计时</div>
+      <div style="margin-bottom:8px">· 第二天的单词暂时不要背 还未更新 会在今天更新出来</div>
       <div style="font-weight:700;color:var(--accent);margin-bottom:4px;">9.22 23:11更新内容</div>
       <div>· 新增粉色桌面图标，把网址「添加到主屏幕」就有图标了</div>
       <div style="border-top:1px solid var(--ink-soft);margin:14px 0 10px;"></div>
