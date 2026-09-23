@@ -221,7 +221,10 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;backgr
       </div>
       <p class="muted">首页「今日新词」会显示 已背 / 目标</p>
       <div class="h2">数据</div>
+      <div class="menu-item" onclick="exportData()">📤 导出学习记录 <span class="arr">›</span></div>
+      <div class="menu-item" onclick="document.getElementById('import-file').click()">📥 导入学习记录 <span class="arr">›</span></div>
       <div class="menu-item" onclick="clearData()">🗑 清空所有学习数据 <span class="arr">›</span></div>
+      <input type="file" id="import-file" accept=".json,application/json" style="display:none" onchange="if(this.files&&this.files[0]){importData(this.files[0]);}this.value='';">
     </div>
   </div>
 
@@ -728,6 +731,38 @@ function clearData(){
   state={};state.w={};state.days={};state.streak=0;state.accent='uk';state.goal=20;state.rate=1;
   save();nav('home');renderHome();alert('已清空，重新开始吧~');
 }
+function exportData(){
+  var out={exported:new Date().toISOString(),items:{}};
+  var n=0;
+  for(var i=0;i<localStorage.length;i++){
+    var k=localStorage.key(i);
+    if(k && k.indexOf('xixin_')===0){out.items[k]=localStorage.getItem(k);n++;}
+  }
+  if(!n){alert('还没有学习数据可以导出，先去背几个词吧~');return;}
+  var blob=new Blob([JSON.stringify(out,null,2)],{type:'application/json'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='beidanzi-backup-'+out.exported.slice(0,10)+'.json';
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
+  alert('导出成功！共 '+n+' 条记录，文件已下载，记得存好。');
+}
+function importData(file){
+  var reader=new FileReader();
+  reader.onload=function(){
+    try{
+      var data=JSON.parse(reader.result);
+      var items=(data&&data.items)?data.items:data;
+      var n=0;
+      for(var k in items){if(items.hasOwnProperty(k)&&k.indexOf('xixin_')===0){localStorage.setItem(k,items[k]);n++;}}
+      alert('导入成功，已恢复 '+n+' 条数据，马上刷新…');
+      setTimeout(function(){location.reload();},400);
+    }catch(e){
+      alert('导入失败：这不是有效的备份文件。');
+    }
+  };
+  reader.readAsText(file);
+}
 function homeSearch(){
   var v=(document.getElementById('home-search-input').value||'').trim().toLowerCase();
   var box=document.getElementById('home-search-result');
@@ -773,7 +808,7 @@ function openAdmin(){
   document.getElementById('admin-data').textContent=makeReport();
   document.getElementById('admin-modal').style.display='flex';
 }
-var NOTICE_VER='5';
+var NOTICE_VER='6';
 function showNoticeIfNeeded(){var read=null;try{read=localStorage.getItem('notice_read_ver');}catch(e){read=null;}if(read!==NOTICE_VER){document.getElementById('notice-modal').style.display='flex';}}
 function closeNotice(){document.getElementById('notice-modal').style.display='none';try{localStorage.setItem('notice_read_ver',NOTICE_VER);}catch(e){}}
 function noticeNext(){document.getElementById('notice-p1').style.display='none';document.getElementById('notice-p2').style.display='block';document.getElementById('notice-x').style.display='block';}
@@ -832,9 +867,21 @@ document.addEventListener('DOMContentLoaded',function(){init();});
         <div>· 查单词、错题本、收藏</div>
         <div>· 学习报告、打卡日历</div>
         <div>· 发音语速、每日目标设置</div>
+        <div style="background:#fdf3e3;border-radius:10px;padding:12px 14px;margin-top:14px;">
+          <div style="font-weight:700;margin-bottom:6px;">iPhone / iPad 用户 · 请把本站「添加到主屏幕」再用</div>
+          <div>iPhone 上数据总是丢，多半就是没装到主屏幕：Safari 会在连续 7 天没打开本站后自动清空它的全部本地数据（Apple 的隐私策略，网站躲不过）；手机存储紧张时，系统也会回收网页数据。</div>
+          <div style="margin-top:6px;">把本站「添加到主屏幕」、之后从桌面图标打开，能明显改善这一点（主屏幕应用不计入那 7 天）。做法：用 Safari 打开本站 → 点底部中间的「分享」按钮（方框加箭头）→ 「添加到主屏幕」→ 再从手机桌面点新图标进入。</div>
+          <div style="margin-top:6px;">注意：主屏幕应用与 Safari 是两套独立存储，切换前先在 设置 → 「导出数据」导一份完整备份，切过去后再「导入数据」恢复；平时都从桌面图标打开用。（安卓没有这条 7 天规则，但存储紧张时系统同样会清网页数据，所以两种手机都要定期导出备份。）</div>
+        </div>
         <button onclick="noticeNext()" style="width:100%;padding:11px;border:none;border-radius:10px;background:var(--accent);color:#fff;font-size:15px;font-weight:600;margin-top:14px;">下一页 →</button>
       </div>
       <div id="notice-p2" style="display:none;">
+        <div style="font-weight:700;color:var(--accent);margin:12px 0 4px;">9.23 17:00 更新内容</div>
+        <div>由于顽固 bug 的存在，导致现在的数据是重新上传的，昨天的数据可能被清零</div>
+        <div>我会在今天或者明天尽量更新出账号云端功能</div>
+        <div>带来的不便，非常抱歉</div>
+        <div>已经修复已知 bug</div>
+        <div style="border-top:1px solid var(--ink-soft);margin:14px 0 10px;"></div>
         <div style="font-weight:700;color:var(--accent);margin:12px 0 4px;">9.23 14:00 更新内容</div>
         <div>· 词库大升级：四级 4500+ 词，新增六级 2000+ 词</div>
         <div>· 单词卡片新增「词性」「词组搭配」显示</div>
