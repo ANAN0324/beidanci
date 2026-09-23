@@ -1,11 +1,11 @@
 {
-  "name": "四级背单词",
+  "name": "一起背单词",
   "short_name": "背单词",
-  "start_url": "./",
+  "start_url": ".\/",
   "display": "standalone",
   "background_color": "#fbf8f2",
   "theme_color": "#d98a8a",
   "icons": [
-    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }
+    { "src": "icon.svg", "sizes": "any", "type": "image\/svg+xml" }
   ]
 }
