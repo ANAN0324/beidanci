@@ -278,6 +278,8 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;backgr
 
 <script src="cet4.js"></script>
 <script src="cet6.js"></script>
+<script src="gaokao_high.js"></script>
+<script src="gaokao_3500.js"></script>
 <script>
 const BOOK_CET4 = [
 {word:"eliminate",uk:"/ɪˈlɪmɪneɪt/",us:"/ɪˈlɪmɪneɪt/",pos:"vt.",meaning:"消除，清除；淘汰；消灭",example_en:"But today, technology and automation are eliminating many jobs.",example_cn:"但是今天，技术和自动化正在使很多工作流失。",phrases:["eliminate a risk 消除风险","eliminate poverty 消除贫困","be eliminated in the first round 在第一轮被淘汰"],deri:["elimination n. 消除","eliminative adj. 淘汰的"],root:"e-（出）+ limin（门槛）+ -ate → 赶出门槛 → 消除",syn:["remove","get rid of","eradicate"]},
@@ -343,10 +345,28 @@ if(typeof window!=='undefined' && window.CET6_DATA && window.CET6_DATA.length){
     });
   });
 }
+// 高考高频词（gaokao_high.js，真题核心高频词）
+const BOOK_GAOKAO_HIGH = [];
+if(typeof window!=='undefined' && window.GAOKAO_HIGH_DATA && window.GAOKAO_HIGH_DATA.length){
+  window.GAOKAO_HIGH_DATA.forEach(function(e){
+    if(!e || !e.name)return;
+    BOOK_GAOKAO_HIGH.push({word:e.name,uk:e.ukphone||'',us:e.usphone||'',pos:e.pos||'',meaning:(e.trans&&e.trans.join)?e.trans.join('；'):'',example_en:'',example_cn:'',phrases:[],deri:[],root:'',syn:[]});
+  });
+}
+// 高考必备词（gaokao_3500.js，大纲必备约3500词）
+const BOOK_GAOKAO_3500 = [];
+if(typeof window!=='undefined' && window.GAOKAO_3500_DATA && window.GAOKAO_3500_DATA.length){
+  window.GAOKAO_3500_DATA.forEach(function(e){
+    if(!e || !e.name)return;
+    BOOK_GAOKAO_3500.push({word:e.name,uk:e.ukphone||'',us:e.usphone||'',pos:e.pos||'',meaning:(e.trans&&e.trans.join)?e.trans.join('；'):'',example_en:'',example_cn:'',phrases:[],deri:[],root:'',syn:[]});
+  });
+}
 // 词书列表：以后想加哪本（考研/托福/雅思…），在这里加一条即可
 const BOOKS=[
   {id:'cet4', name:'四级', words:BOOK_CET4},
-  {id:'cet6', name:'六级', words:BOOK_CET6}
+  {id:'cet6', name:'六级', words:BOOK_CET6},
+  {id:'gaokao_high', name:'高考高频词', words:BOOK_GAOKAO_HIGH},
+  {id:'gaokao_3500', name:'高考必备词', words:BOOK_GAOKAO_3500}
 ];
 let curBookId='cet4';
 try{curBookId=localStorage.getItem('xixin_cur_book')||'cet4';}catch(e){curBookId='cet4';}
@@ -819,7 +839,7 @@ function openAdmin(){
   document.getElementById('admin-data').textContent=makeReport();
   document.getElementById('admin-modal').style.display='flex';
 }
-var NOTICE_VER='7';
+var NOTICE_VER='8';
 function showNoticeIfNeeded(){var read=null;try{read=localStorage.getItem('notice_read_ver');}catch(e){read=null;}if(read!==NOTICE_VER){document.getElementById('notice-modal').style.display='flex';}}
 function closeNotice(){document.getElementById('notice-modal').style.display='none';try{localStorage.setItem('notice_read_ver',NOTICE_VER);}catch(e){}}
 function noticeNext(){document.getElementById('notice-p1').style.display='none';document.getElementById('notice-p2').style.display='block';document.getElementById('notice-x').style.display='block';}
@@ -887,6 +907,10 @@ document.addEventListener('DOMContentLoaded',function(){init();});
         <button onclick="noticeNext()" style="width:100%;padding:11px;border:none;border-radius:10px;background:var(--accent);color:#fff;font-size:15px;font-weight:600;margin-top:14px;">下一页 →</button>
       </div>
       <div id="notice-p2" style="display:none;">
+        <div style="font-weight:700;color:var(--accent);margin:12px 0 4px;">9.24 12:30 更新内容</div>
+        <div>· 新增「高考高频词」词书（约 800 词）</div>
+        <div>· 新增「高考必备词」词书（约 3500 词）</div>
+        <div style="border-top:1px solid var(--ink-soft);margin:14px 0 10px;"></div>
         <div style="font-weight:700;color:var(--accent);margin:12px 0 4px;">9.24 10:00 更新内容</div>
         <div>· 复习升级：点「记住了」会先亮中文释义核对，记错就 10 分钟重考，堵住「假认识」</div>
         <div style="border-top:1px solid var(--ink-soft);margin:14px 0 10px;"></div>
