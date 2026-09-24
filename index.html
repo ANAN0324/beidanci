@@ -396,7 +396,7 @@ function getW(w){if(!state.w[w])state.w[w]={s:0,fav:false,n:0};return state.w[w]
 function dueWords(){return WORDS.filter(x=>{const r=getW(x.word);return r.s>=1&&r.s<6&&r.n&&r.n<=now();});}
 function newWords(){return WORDS.filter(x=>getW(x.word).s===0);}
 
-let queue=[],qi=0,mode='new',cur=null,undoStack=[],jumpStack=[],jumpCur=null,revealed=false,sessionStart=0,sessionTimer=null;
+let queue=[],qi=0,mode='new',cur=null,undoStack=[],jumpStack=[],jumpCur=null,revealed=false,revealFrom='wrong',sessionStart=0,sessionTimer=null;
 function nav(screen){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('screen-'+screen).classList.add('active');document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('on'));var ni=document.querySelector('.nav-item[data-nav="'+screen+'"]');if(ni)ni.classList.add('on');if(screen!=='study')stopTimer();if(screen==='home')renderHome();if(screen==='cal')renderCal();if(screen==='me')renderReport();window.scrollTo(0,0);}
 function goHome(){nav('home');}
 function renderHome(){
@@ -457,7 +457,7 @@ function switchBook(id){
   try{localStorage.setItem('xixin_cur_book',id);}catch(e){}
   WORDS=(BOOKS.filter(function(b){return b.id===id;})[0]||BOOKS[0]).words;
   state=load();
-  queue=[];qi=0;cur=null;undoStack=[];jumpStack=[];jumpCur=null;revealed=false;
+  queue=[];qi=0;cur=null;undoStack=[];jumpStack=[];jumpCur=null;revealed=false;revealFrom='wrong';
   stopTimer();
   closeBookPicker();
   nav('home');
@@ -508,14 +508,25 @@ function setActions(){
   if(mode==='new'){
     row.innerHTML='<button class="act-btn btn-prev" onclick="prevCard()">上一个</button><button class="act-btn btn-next" onclick="nextNew()">下一个</button>';
   }else{
-    if(revealed){
-      row.innerHTML='<button class="act-btn btn-next" onclick="markWrong()">下一个</button>';
+  if(revealed){
+      if(revealFrom==='known'){
+        row.innerHTML='<button class="act-btn btn-next" onclick="markNext()">对，是这个意思</button><button class="act-btn btn-wrong" onclick="markWrong()">啊，记错了</button>';
+      }else{
+        row.innerHTML='<button class="act-btn btn-next" onclick="markWrong()">下一个</button>';
+      }
     }else{
-      row.innerHTML='<button class="act-btn btn-wrong" onclick="revealCard()">不记得了</button><button class="act-btn btn-next" onclick="markNext()">记住了</button>';
+      row.innerHTML='<button class="act-btn btn-wrong" onclick="revealCard()">不记得了</button><button class="act-btn btn-next" onclick="revealCardForKnown()">记住了</button>';
     }
   }
 }
 function revealCard(){
+  revealFrom='wrong';
+  revealed=true;
+  showFullCard();
+  setActions();
+}
+function revealCardForKnown(){
+  revealFrom='known';
   revealed=true;
   showFullCard();
   setActions();
@@ -808,7 +819,7 @@ function openAdmin(){
   document.getElementById('admin-data').textContent=makeReport();
   document.getElementById('admin-modal').style.display='flex';
 }
-var NOTICE_VER='6';
+var NOTICE_VER='7';
 function showNoticeIfNeeded(){var read=null;try{read=localStorage.getItem('notice_read_ver');}catch(e){read=null;}if(read!==NOTICE_VER){document.getElementById('notice-modal').style.display='flex';}}
 function closeNotice(){document.getElementById('notice-modal').style.display='none';try{localStorage.setItem('notice_read_ver',NOTICE_VER);}catch(e){}}
 function noticeNext(){document.getElementById('notice-p1').style.display='none';document.getElementById('notice-p2').style.display='block';document.getElementById('notice-x').style.display='block';}
@@ -876,6 +887,9 @@ document.addEventListener('DOMContentLoaded',function(){init();});
         <button onclick="noticeNext()" style="width:100%;padding:11px;border:none;border-radius:10px;background:var(--accent);color:#fff;font-size:15px;font-weight:600;margin-top:14px;">下一页 →</button>
       </div>
       <div id="notice-p2" style="display:none;">
+        <div style="font-weight:700;color:var(--accent);margin:12px 0 4px;">9.24 10:00 更新内容</div>
+        <div>· 复习升级：点「记住了」会先亮中文释义核对，记错就 10 分钟重考，堵住「假认识」</div>
+        <div style="border-top:1px solid var(--ink-soft);margin:14px 0 10px;"></div>
         <div style="font-weight:700;color:var(--accent);margin:12px 0 4px;">9.23 17:00 更新内容</div>
         <div>由于顽固 bug 的存在，导致现在的数据是重新上传的，昨天的数据可能被清零</div>
         <div>我会在今天或者明天尽量更新出账号云端功能</div>
